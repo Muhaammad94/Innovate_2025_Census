@@ -1,0 +1,43 @@
+ 
+version: '3.8'
+
+services:
+  # Node.js application service
+  app:
+    build: .
+    container_name: census_app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app  # Bind mount the current directory to the container for live code changes
+    env_file:
+      - .env  # Loading environment variables from .env file
+    depends_on:
+      - postgres  # Ensures postgres is ready before starting the app
+    command: sh -c "sleep 5 && npm run dev"
+
+  
+  # PostgreSQL database service
+  postgres:
+    image: postgres:14 # Fixed version to avoid version changes
+    container_name: postgres_census
+    env_file:
+      - .env  # Loading environment variables from .env file
+    ports:
+      - "5432:5432" # Exposing default Postgres port
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Mount volume for persistent data storage      
+      # - ./postgresql.conf:/var/lib/postgresql/data/postgresql.conf
+    networks:
+      - census-network  # Define network for internal communication
+    # command:
+    #   postgres -c config_file=/var/lib/postgresql/data/postgresql.conf  # Specify custom config file
+
+# Volumes for persistent data
+volumes:
+  postgres_data:
+
+# Networks to manage service communication
+networks:
+  census-network:
+    driver: bridge
